@@ -1,0 +1,20 @@
+.env
+__pycache__/
+.venv/
+*.pyc
+*.pyo
+.mypy_cache/
+.ruff_cache/
+
+# Generated data (regenerable from seed.sql)
+data/ecommerce.db
+data/chroma/
+
+# Observability logs (local only, never commit)
+logs/
+*.db
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store
