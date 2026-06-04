@@ -10,8 +10,11 @@ to "how much does one query cost?" or "which question triggers retries?".
 
 from __future__ import annotations
 
+import json
+import os
 import sqlite3
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from src.seed import PROJECT_ROOT
@@ -108,8 +111,30 @@ def log_call(
     Failures are logged to stderr and swallowed.
     """
     try:
-        _init_db(db_path)
         cost = _compute_cost(model, input_tokens, output_tokens)
+
+        if os.environ.get("K_SERVICE"):
+            # Cloud Run: emit JSON to stdout for Cloud Logging.
+            json.dump(
+                {
+                    "event": "llm_call",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "project": PROJECT_NAME,
+                    "model": model,
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                    "latency_ms": latency_ms,
+                    "cost_usd": cost,
+                    "success": success,
+                    "error_msg": error_msg,
+                },
+                sys.stdout,
+            )
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+            return
+
+        _init_db(db_path)
         conn = sqlite3.connect(db_path)
         try:
             conn.execute(
