@@ -39,6 +39,12 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
+      # Four agent tests hit a real SQLite DB (no mocks, by design). The
+      # compiled ecommerce.db is gitignored, so build it from the tracked
+      # data/seed.sql before running the suite.
+      - name: Seed demo database
+        run: uv run python -m src.seed
+
       - name: Run tests
         run: uv run pytest
 
